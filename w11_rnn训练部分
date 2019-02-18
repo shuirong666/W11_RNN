@@ -1,0 +1,14 @@
+rnn训练部分说明
+1.输入：全宋词。依次截取10个字，1-9是x，2-10分别是对应的y。即每个字的标签是其后一个字。
+以苏轼的江神子（江城子）为例：输入为 “老夫聊发少年”，则对应的label为"夫聊发少年狂"。
+2.网络结构：
+tf.nn.rnn_cell.DropoutWrapper：每层网络丢弃的比率，应用于叠加网络的输入和输出。
+tf.nn.rnn_cell.BasicLSTMCell：每个基础网络含有128个横向隐层。动态计算cell，即根据每句话的单字个数，自动结束隐层计算。
+tf.nn.rnn_cell.MultiRNNCell：用了3层BasicLSTMCell，进行叠加网络。
+3.RNN部分直接以embedding作为输入，所以其hiddenunit这里取128,也就是embedding的维度即可。
+RNN的输出是维度128的，是个batch_sizenum_steps128这种的输出，为了做loss方便，concat，flatten等
+RNN中BasicLSTMCell解决梯度消失的问题。梯度爆炸，直接对gradient裁剪
+4.加载word2vec的训练结果，即获得字之间关系的，降维后的权重矩阵。用这个来初始化权重矩阵，缩短训练时间。
+训练过程至少要到第二个epoch才能看到一些比较有意义的输出，第一个epoch的输出loss在6.5左右.可能是大量的标点，换行等。
+而且这种情况后面还会有。
+5.加载rnn作业中dictiionary和reverse_dictionary为汉字的索引。为了保证汉字索引(第四步加载的)的对应关系，无需embeding重复生成的。
